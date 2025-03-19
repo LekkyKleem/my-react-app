@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 type Todo = {
   id: number;
@@ -6,33 +6,40 @@ type Todo = {
   completed: boolean;
 };
 
-const TodoList: React.FC = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+type TodoListProps = {
+  todos: Todo[];
+  toggleTodo: (id: number) => void;
+};
 
-  useEffect(() => {
-    setIsLoading(true);
-    fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
-      .then((res) => res.json())
-      .then((data) => {
-        setTodos(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
+const TodoList: React.FC<TodoListProps> = ({ todos, toggleTodo }) => {
+  const [filter, setFilter] = useState<"all" | "completed" | "incomplete">("all");
+
+  const filteredTodos = todos.filter((todo) => {
+    if (filter === "completed") return todo.completed;
+    if (filter === "incomplete") return !todo.completed;
+    return true; // "all"
+  });
 
   return (
     <div>
-      <h2>Список дел (из API)</h2>
-      {isLoading ? (
-        <p>Загрузка...</p>
-      ) : (
-        <ul>
-          {todos.map((todo) => (
-            <li key={todo.id}>{todo.title}</li>
-          ))}
-        </ul>
-      )}
+      <h2>Список дел</h2>
+
+      {/* Фильтры */}
+      <div>
+        <button onClick={() => setFilter("all")}>Все</button>
+        <button onClick={() => setFilter("completed")}>Выполненные</button>
+        <button onClick={() => setFilter("incomplete")}>Невыполненные</button>
+      </div>
+
+      {/* Список задач */}
+      <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+        {filteredTodos.map((todo) => (
+          <li key={todo.id} style={{ textDecoration: todo.completed ? "line-through" : "none" }}>
+            <input type="checkbox" checked={todo.completed} onChange={() => toggleTodo(todo.id)} />
+            {todo.title}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
